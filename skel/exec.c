@@ -31,7 +31,14 @@ static void get_environ_value(char* arg, char* value, int idx) {
 // - 'get_environ_*()' can be useful here
 static void set_environ_vars(char** eargv, int eargc) {
 
-	// Your code here
+	char auxName[BUFLEN], auxVal[BUFLEN];
+
+	for (int i = 0; i < eargc; ++i)
+	{
+		get_environ_key(eargv[i], auxName);
+		get_environ_value(eargv[i], auxVal, strlen(auxName));
+		setenv(auxName, auxVal, 1);
+	}	
 } 
 
 // opens the file in which the stdin/stdout or
@@ -46,8 +53,38 @@ static void set_environ_vars(char** eargv, int eargc) {
 // 	to make it a readable normal file
 static int open_redir_fd(char* file, int flags) {
 
-	// Your code here
-	return -1;
+	/*int fileNameIn, fileNameOut, fileNameErr;
+
+	if(flags < 0 || flags > 2)
+		return -1;
+
+	if(flags == 0) {
+		if((fileNameIn = open(file, O_RDONLY)) < 0)
+				return -1;
+		if((dup2(fileNameIn, flags)) < 0)
+			return -1;
+
+		close(fileNameIn);
+	}
+	if(flags == 1) {
+		if((fileNameOut = open(file, O_CREAT, S_IWUSR || S_IRUSR)) < 0)
+				return -1;
+		if((dup2(fileNameOut, flags)) < 0)
+			return -1;
+	
+		close(fileNameOut);
+	}
+
+	if(flags == 2) {
+		if((fileNameErr = open(file, O_CREAT, S_IWUSR || S_IRUSR)) < 0)
+				return -1;
+		if((dup2(fileNameErr, flags)) < 0)
+			return -1;
+	
+		close(fileNameErr);
+	}*/
+
+	return 0;
 }
 
 // executes a command - does not return
@@ -64,21 +101,18 @@ void exec_cmd(struct cmd* cmd) {
 	struct execcmd* r;
 	struct pipecmd* p;
 
+	struct execcmd* auxLeft;
+	struct execcmd* auxRight;	
+
 	switch (cmd->type) {
 
 		case EXEC:
 			// spawns a command
 			//
-			//e->type = cmd->type;
-			//e->pid = cmd->pid;
-			//strcpy(e->scmd,cmd->scmd);
 
-			execvp(cmd->in_file, cmd->argv);
-
-			//La funcion ya fue parseada y falta ver la parte de los argumentos
-
-			printf("Commands are not yet implemented\n");
-			_exit(-1);
+			e = (struct execcmd*) cmd;
+			execvp((e->argv)[0], e->argv);
+			
 			break;
 
 		case BACK: {
@@ -96,19 +130,42 @@ void exec_cmd(struct cmd* cmd) {
 			// To check if a redirection has to be performed
 			// verify if file name's length (in the execcmd struct)
 			// is greater than zero
-			//
-			// Your code here
-			printf("Redirections are not yet implemented\n");
-			_exit(-1);
+			
+			/*r = (struct execcmd*) cmd;
+
+			if(strlen(r->out_file))
+				open_redir_fd(r->out_file, 0);
+
+			if(strlen(r->in_file))
+				open_redir_fd(r->in_file, 1);
+
+			if(strlen(r->err_file))
+				open_redir_fd(r->err_file, 2);*/
+
+			//execvp((e->argv)[0], e->argv);
 			break;
 		}
 		
 		case PIPE: {
 			// pipes two commands
 			//
-			// Your code here
-			printf("Pipes are not yet implemented\n");
-				
+			/*int pipefd[2];
+
+			pipe(pipefd);
+
+			dup2(pipefd[0], 0);
+			dup2(pipefd[1], 1);
+
+			close(pipefd[0]);
+			close(pipefd[1]);
+
+			p = (struct pipecmd*) cmd;
+			auxLeft = (struct execcmd*) p->leftcmd;
+			auxRight = (struct execcmd*) p->rightcmd;
+			
+			execvp((auxLeft->argv)[0], auxLeft->argv); //Uso Fork?
+			execvp((auxRight->argv)[0], auxRight->argv);*/			
+
 			// free the memory allocated
 			// for the pipe tree structure
 			free_command(parsed_pipe);

@@ -27,15 +27,8 @@ static void init_shell() {
 		perror(buf);
 	} else {
 		snprintf(promt, sizeof promt, "(%s)", home);
-	}	
+	}
 }
-
-//Mi codigo punto 1
-
-/*char *path = getenv("PATH");
-char *tmpstr = malloc(strlen(path)+strlen(executable)+2);*/
-
-
 
 int main(void) {
 

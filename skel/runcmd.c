@@ -14,6 +14,7 @@ int run_cmd(char* cmd) {
 	if (cmd[0] == END_STRING)
 		return 0;
 
+	//Falta modificar bultins al ejecutar $?
 	// cd built-in call
 	if (cd(cmd))
 		return 0;
@@ -41,9 +42,6 @@ int run_cmd(char* cmd) {
 		exec_cmd(parsed);
 	}
 
-	// store the pid of the process
-	parsed->pid = p;
-
 	// background process special treatment
 	// Hint:
 	// - check if the process is 
@@ -51,7 +49,13 @@ int run_cmd(char* cmd) {
 	// - print info about it with 
 	// 	'print_back_info()'
 	//
-	// Your code here
+	else{
+		print_back_info(parsed);
+		exec_cmd(parsed);
+	}
+
+	// store the pid of the process
+	parsed->pid = p;
 
 	// waits for the process to finish
 	waitpid(p, &status, 0);

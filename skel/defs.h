@@ -23,6 +23,8 @@
 #define END_STRING '\0'
 #define END_LINE '\n'
 #define SPACE ' '
+#define INIT_CHOP 10
+#define INC_CHOP 2
 
 #define BUFLEN 1024
 #define PRMTLEN 1024

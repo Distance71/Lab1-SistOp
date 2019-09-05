@@ -36,7 +36,7 @@ static bool parse_redir_flow(struct execcmd* c, char* arg) {
 				break;
 			}
 		}
-		
+
 		free(arg);
 		c->type = REDIR;
 		
@@ -97,9 +97,27 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 // 	size of 'arg'). If that's the case,
 // 	you should realloc 'arg' to the new
 // 	size.
-static char* expand_environ_var(char* arg) {
+static char* expand_environ_var(char* arg) { //Falta Corregir bugs
 
-	// Your code here
+	unsigned int strInitSize = strlen(arg);
+
+	if(arg[0] == '$') { //Ver bug space y basura
+
+		if((arg[1]) =='?')
+		{
+			strcpy(arg, "?");
+			return arg;
+		}
+
+		char *auxEnvVar = getenv(arg + 1);
+		if(strlen(auxEnvVar) > strInitSize) {
+			arg = (char *) realloc(arg, sizeof(char) * strlen(auxEnvVar) + 1);
+			if(!arg) return NULL;
+		}
+
+		strcpy(arg, auxEnvVar);
+		arg[strlen(auxEnvVar)]= '\0';
+	}
 
 	return arg;
 }
@@ -130,7 +148,7 @@ static struct cmd* parse_exec(char* buf_cmd) {
 		if (parse_environ_var(c, tok))
 			continue;
 		
-		tok = expand_environ_var(tok); //Falta hacerla
+		tok = expand_environ_var(tok);
 		
 		c->argv[argc++] = tok;
 	}

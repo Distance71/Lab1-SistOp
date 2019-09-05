@@ -34,7 +34,7 @@ struct cmd* pipe_cmd_create(struct cmd* left, struct cmd* right) {
 
 	if (!right)
 		return left;
-	
+
 	struct pipecmd* p;
 
 	p = (struct pipecmd*)calloc(sizeof(*p), sizeof(*p));
