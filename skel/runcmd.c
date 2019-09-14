@@ -3,12 +3,28 @@
 int status = 0;
 struct cmd* parsed_pipe;
 
+
+void handler(int sig)
+{
+    puts("Se termino el otro proceso");
+}
+
 // runs the command in 'cmd'
 int run_cmd(char* cmd) {
 	
 	pid_t p;
 	struct cmd *parsed;
 
+	char stack[SIGSTKSZ];
+    stack_t ss = {
+        .ss_size = SIGSTKSZ,
+        .ss_sp = stack,
+    };
+    struct sigaction sa = {
+        .sa_handler = handler,
+        .sa_flags = SA_ONSTACK
+    };
+    
 	// if the "enter" key is pressed
 	// just print the promt again
 	if (cmd[0] == END_STRING)
@@ -27,11 +43,14 @@ int run_cmd(char* cmd) {
 	if (pwd(cmd))
 		return 0;
 
+	/*if(command_?(cmd))
+		return 0;*/
+
 	// parses the command line
 	parsed = parse_line(cmd);
 	
 	// forks and run the command
-	if ((p = fork()) == 0) {
+	if ((p = fork()) == 0) { //El hijo no pasa de aqui
 		
 		// keep a reference
 		// to the parsed pipe cmd
@@ -49,16 +68,21 @@ int run_cmd(char* cmd) {
 	// - print info about it with 
 	// 	'print_back_info()'
 	//
-	else{
-		print_back_info(parsed);
-		exec_cmd(parsed);
-	}
 
 	// store the pid of the process
 	parsed->pid = p;
 
 	// waits for the process to finish
-	waitpid(p, &status, 0);
+	
+	if(parsed->type == BACK) {
+		//sigaltstack(&ss, 0);
+	    //sigfillset(&sa.sa_mask);
+	    //sigaction(p, &sa, 0);
+
+		print_back_info(parsed);
+	}
+	else
+		waitpid(p, &status, 0); //No es necesario llamarlo en background
 	
 	print_status_info(parsed);
 	
@@ -66,4 +90,3 @@ int run_cmd(char* cmd) {
 
 	return 0;
 }
-

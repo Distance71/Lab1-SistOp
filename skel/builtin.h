@@ -4,6 +4,8 @@
 #include "defs.h"
 #include "utils.h"
 
+extern int status;
+
 extern char promt[PRMTLEN];
 
 int cd(char* cmd);

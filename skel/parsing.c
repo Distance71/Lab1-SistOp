@@ -27,12 +27,27 @@ static bool parse_redir_flow(struct execcmd* c, char* arg) {
 		switch (outIdx) {
 			// stdout redir
 			case 0: {
-				strcpy(c->out_file, arg + 1);
+				if(arg[outIdx + 1] == '&' && arg[outIdx + 2] != END_STRING) {
+					strcpy(c->out_file, arg + outIdx + 2);
+					strcpy(c->err_file, arg + outIdx + 2);
+				}
+				else if(arg[outIdx + 1] == '>' && arg[outIdx + 2] != END_STRING) {
+					//Hay que implementar modificando la opcion al abrir por concatenate
+					//La implementacion es muy facil, pero implica agregar datos a types o leer scnd en runcmd
+					//Me gusta mas agregar datos, pero como es opcional, de comodo, ire por lo segundo
+				}
+				else
+					strcpy(c->out_file, arg + 1);
 				break;
 			}
 			// stderr redir
 			case 1: {
-				strcpy(c->err_file, &arg[outIdx + 1]);
+				if(arg[outIdx + 1] == '&' && arg[outIdx + 2] == '1') {
+					strcpy(c->out_file, arg + outIdx + 3);
+					strcpy(c->err_file, arg + outIdx + 3);
+				}
+				else
+					strcpy(c->err_file, &arg[outIdx + 1]);
 				break;
 			}
 		}
@@ -97,15 +112,21 @@ static bool parse_environ_var(struct execcmd* c, char* arg) {
 // 	size of 'arg'). If that's the case,
 // 	you should realloc 'arg' to the new
 // 	size.
+//Parte 1.2 y
 static char* expand_environ_var(char* arg) { //Falta Corregir bugs
 
 	unsigned int strInitSize = strlen(arg);
+
+	//printf("%s%s\n", "Gato: ", arg);
 
 	if(arg[0] == '$') { //Ver bug space y basura
 
 		if((arg[1]) =='?')
 		{
-			strcpy(arg, "?");
+			//char *auxEnvSpecialVar = getenv(arg + 1);
+			//strcpy(arg, "?");
+			sprintf(arg, "%d", status);
+			setenv("?", arg, 1);
 			return arg;
 		}
 
@@ -131,14 +152,14 @@ static struct cmd* parse_exec(char* buf_cmd) {
 	struct execcmd* c;
 	char* tok;
 	int idx = 0, argc = 0;
-	
+
 	c = (struct execcmd*)exec_cmd_create(buf_cmd);
 	
 	while (buf_cmd[idx] != END_STRING) {
-	
+
 		tok = get_token(buf_cmd, idx);
 		idx = idx + strlen(tok);
-		
+
 		if (buf_cmd[idx] != END_STRING)
 			idx++;
 		
@@ -149,7 +170,7 @@ static struct cmd* parse_exec(char* buf_cmd) {
 			continue;
 		
 		tok = expand_environ_var(tok);
-		
+
 		c->argv[argc++] = tok;
 	}
 	
@@ -200,12 +221,19 @@ static struct cmd* parse_cmd(char* buf_cmd) {
 struct cmd* parse_line(char* buf) {
 	
 	struct cmd *r, *l;
-	
+
 	char* right = split_line(buf, '|');
-	
-	l = parse_cmd(buf);
-	r = parse_cmd(right);
-	
+
+	//printf("gato: %s\n el otro: %s\n", right, buf);
+	if(strcmp(right, "")) {
+		l = parse_cmd(buf);
+		r = parse_line(right);
+	}
+	else {
+		l = parse_cmd(buf);
+		r = parse_cmd(right);
+	}
+
 	return pipe_cmd_create(l, r);
 }
 
