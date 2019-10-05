@@ -221,9 +221,11 @@ static struct cmd* parse_cmd(char* buf_cmd) {
 struct cmd* parse_line(char* buf) {
 	
 	struct cmd *r, *l;
-
+	//printf("primer buf: %s\n", buf);
 	char* right = split_line(buf, '|');
 
+	//printf("Seg buf: %s\n", buf);
+	//printf("Le right: %s\n", right);
 	//printf("gato: %s\n el otro: %s\n", right, buf);
 	if(strcmp(right, "")) {
 		l = parse_cmd(buf);

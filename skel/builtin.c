@@ -54,13 +54,21 @@ int cd(char* cmd) {
 	i = block_contains(auxCmd, '.');
 
 	if(i > 0 && auxCmd[i + 1] == '.' && auxCmd[i + 2] == '\0') {
+		if(!strncmp(promt, "()", strlen("()")))
+			return 1;
+
 		i = block_contains(promt, ')');
-	
+
 		j = i;
 		while(promt[j] != '/')
 			j--;
 
 		promt[j] = '\0';
+
+		if((block_contains(promt, '/')) < 0) {
+			promt[j] = '/';
+			promt[j + 1] = '\0';
+		}
 
 		//printf("%s", promt + 1);
 		if(!chdir(promt + 1)) {
@@ -100,6 +108,10 @@ int cd(char* cmd) {
 		else{
 			chdir(getenv("HOME"));
 			strcpy(promt, getenv("HOME"));
+			memmove(promt + 1, promt, strlen(promt) + 1);
+			memcpy(promt,"(",1);
+			promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
+			promt[strlen(promt)] = '\0';
 		}
 	}
 
