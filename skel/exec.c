@@ -56,45 +56,47 @@ static void set_environ_vars(char** eargv, int eargc) {
 static int open_redir_fd(char* file, int flags) {
 
 	int fileNameIn, fileNameOut, fileNameErr;
-
-	if(flags < 0 || flags > 3)
+	if(flags < STDIN || flags > STDOUTAPPEND)
 		return -1;
 
-	if(flags == 0) {
-		
-		if((fileNameOut = open(file, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0)
+	switch(flags) {
+		case STDIN:
+			if((fileNameOut = open(file, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0)
 				return -1;
-		if((dup2(fileNameOut, fileno(stdout))) < 0)
-			return -1;
-	
-		close(fileNameOut);
-	}
-
-	if(flags == 1) {
-		if((fileNameIn = open(file, O_RDONLY)) < 0)
+			if((dup2(fileNameOut, fileno(stdout))) < 0)
 				return -1;
-		if((dup2(fileNameIn, fileno(stdin))) < 0)
-			return -1;
 
-		close(fileNameIn);
-	}
+			close(fileNameOut);
+			break;
 
-	if(flags == 2) {
-		if((fileNameErr = open(file, O_CREAT, S_IWUSR || S_IRUSR)) < 0)
+		case STDOUT:
+			if((fileNameIn = open(file, O_RDONLY)) < 0)
 				return -1;
-		if((dup2(fileNameErr, fileno(stderr))) < 0)
-			return -1;
-	
-		close(fileNameErr);
-	}
-
-	if(flags == 3) {
-		if((fileNameOut = open(file, O_CREAT | O_APPEND, S_IRUSR | S_IWUSR)) < 0)
+			if((dup2(fileNameIn, fileno(stdin))) < 0)
 				return -1;
-		if((dup2(fileNameOut, fileno(stdout))) < 0)
-			return -1;
-	
-		close(fileNameOut);	
+
+			close(fileNameIn);
+			break;
+
+		case STDERR:
+
+			if((fileNameErr = open(file, O_CREAT, S_IWUSR || S_IRUSR)) < 0)
+					return -1;
+			if((dup2(fileNameErr, fileno(stderr))) < 0)
+				return -1;
+
+			close(fileNameErr);
+			break;
+
+		case STDOUTAPPEND:
+			if((fileNameOut = open(file, O_CREAT | O_APPEND, S_IRUSR | S_IWUSR)) < 0)
+				return -1;
+			if((dup2(fileNameOut, fileno(stdout))) < 0)
+				return -1;
+
+			close(fileNameOut);
+			break;
+		default:;
 	}
 
 	return 0;
@@ -151,10 +153,21 @@ void exec_cmd(struct cmd* cmd) {
 			//Ver caso especial 2>&1
 			if(strlen(r->out_file)) {
 				auxPos = block_contains(r->scmd, '>');
-				if((r->scmd)[auxPos + 1] == '>')
-					open_redir_fd(r->out_file, 3);
-				else	
-					open_redir_fd(r->out_file, 0);
+
+				switch((r->scmd)[auxPos + 1]) {
+					case '>':
+						open_redir_fd(r->out_file, 3); //Case Append
+						break;
+					case '&':
+						if((r->scmd)[auxPos + 2] == '1' && (r->scmd)[auxPos + 3] == SPACE) { //Else -> Error
+							dup2(1,2);
+							open_redir_fd(r->out_file, 0);
+						}
+						break;
+
+					default:
+						open_redir_fd(r->out_file, 0);
+				}
 			}
 
 			if(strlen(r->in_file))
@@ -162,9 +175,7 @@ void exec_cmd(struct cmd* cmd) {
 
 			if(strlen(r->err_file))
 				open_redir_fd(r->err_file, 2);
-			
-
-			//set_environ_vars(r->eargv, r->eargc);			
+						
 			execvp((r->argv)[0], r->argv);
 			
 			break;

@@ -7,21 +7,13 @@
 // (It must not be called here)
 int exit_shell(char* cmd) {
 
-	char *auxCmd = cmd;
-	size_t i;
+	size_t i = 0;
 
-	for(i = 0; auxCmd[i] == SPACE; i++) 
-		auxCmd[i] = auxCmd[i + 1];	
+	while(cmd[i] == SPACE)
+		i++;
 
-	if(strncmp(auxCmd, "exit", strlen("exit")))
+	if(strcmp(cmd + i, "exit"))
 		return 0;
-
-	/*if (WIFEXITED(status))
-		status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		status = -WTERMSIG(status);
-	else if (WTERMSIG(status))
-		status = -WSTOPSIG(status);*/
 	
 	return 1;
 }
@@ -40,7 +32,7 @@ int exit_shell(char* cmd) {
 int cd(char* cmd) {
 	
 	char auxCmd[BUFLEN];
-	int i = 0, j = 0;
+	size_t i = 0;
 
 	strcpy(auxCmd, cmd);
 
@@ -50,69 +42,33 @@ int cd(char* cmd) {
 	if(strncmp(auxCmd, "cd", strlen("cd")))
 		return 0;
 
-	//Caso cd, falta ver caso borde .. en home
-	i = block_contains(auxCmd, '.');
+	for(i = strlen("cd"); auxCmd[i] == SPACE; i++) 
+		auxCmd[i] = auxCmd[i + 1];
 
-	if(i > 0 && auxCmd[i + 1] == '.' && auxCmd[i + 2] == '\0') {
-		if(!strncmp(promt, "()", strlen("()")))
-			return 1;
-
-		i = block_contains(promt, ')');
-
-		j = i;
-		while(promt[j] != '/')
-			j--;
-
-		promt[j] = '\0';
-
-		if((block_contains(promt, '/')) < 0) {
-			promt[j] = '/';
-			promt[j + 1] = '\0';
-		}
-
-		//printf("%s", promt + 1);
-		if(!chdir(promt + 1)) {
-			promt[j] = ')';
-			promt[j + 1] = '\0';
-			return 1;
-		}
-	}
-
-	i = block_contains(auxCmd, '/');
-
-	//Hay que considerar mas casos y bugs
-	if(i > 0) { //No hay error
-		if(!chdir(auxCmd + i + 1)) { //Validar
+	if(auxCmd[i] != '\0') {
+		if(!chdir(auxCmd + i) && strcmp(auxCmd + i, "..")) {
 			promt[strlen(promt) - 1] = '/';
-			strcat(promt, auxCmd + i + 1);
-			promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
+			strcat(promt, auxCmd + i);
+			promt[strlen(promt)] = ')';
 			promt[strlen(promt)] = '\0';
 			return 1;
 		}
-	}
-	else { 
-		i = strlen("cd");
-		
-		if(auxCmd[i] != '\0') {
-
-			while(auxCmd[i] == SPACE)
-				i++;
-
-			if(!chdir(auxCmd + i)) { //Validar
-				promt[strlen(promt) - 1] = '/';
-				strcat(promt, auxCmd + i);
-				promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
-				promt[strlen(promt)] = '\0';
+		else if(!strcmp(auxCmd + i, "..")) {
+			i = strlen(promt);
+			while(promt[i] != '/') {
+				i--;
 			}
+			promt[i++] = ')';
+			promt[i] = '\0';
 		}
-		else{
-			chdir(getenv("HOME"));
-			strcpy(promt, getenv("HOME"));
-			memmove(promt + 1, promt, strlen(promt) + 1);
-			memcpy(promt,"(",1);
-			promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
-			promt[strlen(promt)] = '\0';
-		}
+	}
+	else {
+		chdir(getenv("HOME"));
+		strcpy(promt, getenv("HOME"));
+		memmove(promt + 1, promt, strlen(promt) + 1);
+		memcpy(promt,"(",1);
+		promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
+		promt[strlen(promt)] = '\0';
 	}
 
 	if (WIFEXITED(status))
@@ -131,27 +87,17 @@ int cd(char* cmd) {
 // 	return true)
 int pwd(char* cmd) {
 
-	char* buffer;
-	size_t i, bufferSize;
+	char buffer[PATH_MAX];
+	size_t i = 0;
 
-	for(i = 0; cmd[i] == SPACE; i++) 
-		cmd[i] = cmd[i + 1];
+	while(cmd[i] == SPACE)
+		i++;
 
-	if(strncmp(cmd, "pwd", strlen("pwd")))
+	if(strcmp(cmd + i, "pwd"))
 		return 0;
 
-	buffer = (char *) malloc(sizeof(char) * INIT_CHOP);
-
-	if(!buffer)
-		return -1; //Habra que validarlo o usar un buffer fijo
-
-	bufferSize = INIT_CHOP * sizeof(char);
-
-	while(!getcwd(buffer, bufferSize)){
-		buffer = realloc(buffer, bufferSize *= INC_CHOP);
-		if(!buffer)
-			return -1;
-	}
+	if(!getcwd(buffer, PATH_MAX))
+		fprintf(stderr, "%s\n", ERROR_TAMANIO_DIRECTORIO);
 		
 	fprintf(stdout, "%s\n", buffer);
 
@@ -164,17 +110,3 @@ int pwd(char* cmd) {
 
 	return 1;
 }
-
-/*int command_?(char* cmd)
-{
-	//Igual a parte 2.2
-}*/
-
-
-/*Pendiente:
-
-	- Variables de entorno 2.2
-	-magica
-	-Lo ultimo
-
-*/

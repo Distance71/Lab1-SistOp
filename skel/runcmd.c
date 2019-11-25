@@ -15,8 +15,8 @@ int run_cmd(char* cmd) {
 	pid_t p;
 	struct cmd *parsed;
 
-	char stack[SIGSTKSZ];
-    stack_t ss = {
+	//char stack[SIGSTKSZ];
+    /*stack_t ss = {
         .ss_sp = stack,
         .ss_flags = 0,
         .ss_size = SIGSTKSZ,
@@ -25,7 +25,7 @@ int run_cmd(char* cmd) {
     struct sigaction sa = {
         .sa_handler = handler,
         .sa_flags = SA_ONSTACK,
-    };
+    };*/
     
 	// if the "enter" key is pressed
 	// just print the promt again
@@ -60,8 +60,18 @@ int run_cmd(char* cmd) {
 		if (parsed->type == PIPE)
 			parsed_pipe = parsed;
 
+		/*if(parsed->type == BACK) {
+			sigaltstack(&ss, 0);
+			setpgid(p, 0);
+		    sigfillset(&sa.sa_mask);
+		}*/
+
 		exec_cmd(parsed);
+		//kill(getpid(), SIGINT);
 	}
+	/*else{
+		sigaction(SIGINT, &sa, NULL);
+	}*/
 
 	// background process special treatment
 	// Hint:
@@ -71,21 +81,16 @@ int run_cmd(char* cmd) {
 	// 	'print_back_info()'
 	//
 
-	// store the pid of the process
 	parsed->pid = p;
 
 	// waits for the process to finish
-	
-	if(parsed->type == BACK) {
-		sigaltstack(&ss, 0);
-		setpgid(p, 0);
-	    //sigfillset(&sa.sa_mask);
-		print_back_info(parsed);
-		sigaction(SIGTERM, &sa, NULL);
-	}
-	else{
+
+	if(parsed->type != BACK) {
 		waitpid(p, &status, 0); //No es necesario llamarlo en background
 		print_status_info(parsed);
+	}
+	else{
+		print_back_info(parsed);
 	}
 	
 	free_command(parsed);

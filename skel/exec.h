@@ -8,6 +8,11 @@
 
 extern struct cmd* parsed_pipe;
 
+#define STDIN 0
+#define STDOUT 1
+#define STDERR 2
+#define STDOUTAPPEND 3
+
 void exec_cmd(struct cmd* c);
 
 #endif // EXEC_H

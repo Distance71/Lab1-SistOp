@@ -4,6 +4,9 @@
 #include "defs.h"
 #include "utils.h"
 
+#define PATH_MAX 500
+#define ERROR_TAMANIO_DIRECTORIO "Error, se ha excedido la longitud del directorio"
+
 extern int status;
 
 extern char promt[PRMTLEN];
