@@ -161,7 +161,6 @@ void exec_cmd(struct cmd* cmd) {
 					case '&':
 						if((r->scmd)[auxPos + 2] == '1' && (r->scmd)[auxPos + 3] == SPACE) { //Else -> Error
 							dup2(1,2);
-							open_redir_fd(r->out_file, 0);
 						}
 						break;
 
@@ -206,8 +205,6 @@ void exec_cmd(struct cmd* cmd) {
 
 				dup2(pipefd[0], fileno(stdin));
 				exec_cmd(auxRight);
-
-				close(pipefd[0]);
 			}
 			else {
 				dup2(fdd, fileno(stdout));

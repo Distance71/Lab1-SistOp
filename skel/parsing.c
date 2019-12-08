@@ -123,10 +123,9 @@ static char* expand_environ_var(char* arg) { //Falta Corregir bugs
 
 		if((arg[1]) =='?')
 		{
-			//char *auxEnvSpecialVar = getenv(arg + 1);
-			//strcpy(arg, "?");
+			
 			sprintf(arg, "%d", status);
-			setenv("?", arg, 1);
+			
 			return arg;
 		}
 

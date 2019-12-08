@@ -51,6 +51,7 @@ int cd(char* cmd) {
 			strcat(promt, auxCmd + i);
 			promt[strlen(promt)] = ')';
 			promt[strlen(promt)] = '\0';
+			status = 0;
 			return 1;
 		}
 		else if(!strcmp(auxCmd + i, "..")) {
@@ -61,22 +62,21 @@ int cd(char* cmd) {
 			promt[i++] = ')';
 			promt[i] = '\0';
 		}
+		else
+			status = 1;
 	}
 	else {
-		chdir(getenv("HOME"));
-		strcpy(promt, getenv("HOME"));
-		memmove(promt + 1, promt, strlen(promt) + 1);
-		memcpy(promt,"(",1);
-		promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
-		promt[strlen(promt)] = '\0';
+		if(!chdir(getenv("HOME"))) {
+			strcpy(promt, getenv("HOME"));
+			memmove(promt + 1, promt, strlen(promt) + 1);
+			memcpy(promt,"(",1);
+			promt[strlen(promt)] = ')'; //Aca preguntar por espacio promt
+			promt[strlen(promt)] = '\0';
+			status = 0;	
+		}
+		else
+			status = 1;
 	}
-
-	if (WIFEXITED(status))
-		status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		status = -WTERMSIG(status);
-	else if (WTERMSIG(status))
-		status = -WSTOPSIG(status);
 
 	return 1;
 }
@@ -100,13 +100,6 @@ int pwd(char* cmd) {
 		fprintf(stderr, "%s\n", ERROR_TAMANIO_DIRECTORIO);
 		
 	fprintf(stdout, "%s\n", buffer);
-
-	if (WIFEXITED(status))
-		status = WEXITSTATUS(status);
-	else if (WIFSIGNALED(status))
-		status = -WTERMSIG(status);
-	else if (WTERMSIG(status))
-		status = -WSTOPSIG(status);
 
 	return 1;
 }
