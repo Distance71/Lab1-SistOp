@@ -44,7 +44,7 @@ static bool parse_redir_flow(struct execcmd* c, char* arg) {
 			case 1: {
 				if(arg[outIdx + 1] == '&' && arg[outIdx + 2] == '1') {
 					strcpy(c->out_file, arg + outIdx + 3);
-					strcpy(c->err_file, arg + outIdx + 3);
+					//strcpy(c->err_file, arg + outIdx + 3);
 				}
 				else
 					strcpy(c->err_file, &arg[outIdx + 1]);

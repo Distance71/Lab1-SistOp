@@ -187,35 +187,33 @@ void exec_cmd(struct cmd* cmd) {
 			pid_t pid;
 			static int fdd;
 
+			int statusLeft;
+
 			struct cmd* auxLeft;
 			struct cmd* auxRight;
 
 			pipe(pipefd);
-
-			fdd = pipefd[1];
 
 			p = (struct pipecmd*) cmd;
 			auxLeft = p->leftcmd;
 			auxRight = p->rightcmd;
 
 			if((pid = fork()) == 0) {
-				wait(NULL);
-				fdd = pipefd[0];
+				close(pipefd[0]);
+				dup2(pipefd[1], fileno(stdout));
 				close(pipefd[1]);
-
-				dup2(pipefd[0], fileno(stdin));
-				exec_cmd(auxRight);
-			}
-			else {
-				dup2(fdd, fileno(stdout));
 				exec_cmd(auxLeft);
 			}
 
-			// free the memory allocated
-			// for the pipe tree structure
-			free_command(parsed_pipe);
+			else {
+				wait(&statusLeft);
+				close(pipefd[1]);
+				dup2(pipefd[0], fileno(stdin));
+				close(pipefd[0]);
+				exec_cmd(auxRight);
+			}
+				break;
 
-			break;
 		}
 	}
 }
